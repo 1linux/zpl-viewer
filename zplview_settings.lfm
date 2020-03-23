@@ -1,0 +1,114 @@
+object FormSettings: TFormSettings
+  Left = 413
+  Height = 234
+  Top = 127
+  Width = 270
+  Caption = 'Einstellungen'
+  ClientHeight = 234
+  ClientWidth = 270
+  Position = poMainFormCenter
+  LCLVersion = '2.0.6.0'
+  object BitBtn1: TBitBtn
+    Left = 16
+    Height = 30
+    Top = 189
+    Width = 75
+    Anchors = [akLeft, akBottom]
+    Default = True
+    DefaultCaption = True
+    Kind = bkOK
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object BitBtn2: TBitBtn
+    Left = 163
+    Height = 30
+    Top = 189
+    Width = 91
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    DefaultCaption = True
+    Kind = bkCancel
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object EdtWidth: TEdit
+    Left = 144
+    Height = 23
+    Top = 96
+    Width = 100
+    Anchors = [akTop, akRight]
+    TabOrder = 2
+    Text = 'EdtWidth'
+  end
+  object EdtHeight: TEdit
+    Left = 144
+    Height = 23
+    Top = 136
+    Width = 100
+    Anchors = [akTop, akRight]
+    TabOrder = 3
+    Text = 'EdtHeight'
+  end
+  object ComRotate: TComboBox
+    Left = 144
+    Height = 23
+    Top = 56
+    Width = 100
+    Anchors = [akTop, akRight]
+    ItemHeight = 15
+    Items.Strings = (
+      '0'
+      '90'
+      '180'
+      '270'
+    )
+    Style = csDropDownList
+    TabOrder = 4
+  end
+  object Label1: TLabel
+    Left = 16
+    Height = 15
+    Top = 16
+    Width = 76
+    Caption = 'Auflösung DPI'
+    ParentColor = False
+  end
+  object Label2: TLabel
+    Left = 16
+    Height = 15
+    Top = 56
+    Width = 45
+    Caption = 'Rotation'
+    ParentColor = False
+  end
+  object Label3: TLabel
+    Left = 16
+    Height = 15
+    Top = 96
+    Width = 56
+    Caption = 'Breite Inch'
+    ParentColor = False
+  end
+  object Label4: TLabel
+    Left = 16
+    Height = 15
+    Top = 136
+    Width = 55
+    Caption = 'Höhe Inch'
+    ParentColor = False
+  end
+  object ComRes: TComboBox
+    Left = 144
+    Height = 23
+    Top = 16
+    Width = 100
+    ItemHeight = 15
+    Items.Strings = (
+      '203'
+      '300'
+    )
+    Style = csDropDownList
+    TabOrder = 5
+  end
+end

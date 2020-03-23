@@ -1,0 +1,79 @@
+object Form1: TForm1
+  Left = 419
+  Height = 553
+  Top = 184
+  Width = 557
+  Caption = 'ZPL-View'
+  ClientHeight = 533
+  ClientWidth = 557
+  Menu = MainMenu1
+  OnClose = FormClose
+  OnCreate = FormCreate
+  LCLVersion = '2.0.6.0'
+  object Image1: TImage
+    Left = 0
+    Height = 510
+    Top = 0
+    Width = 557
+    Align = alClient
+    OnDragDrop = Image1DragDrop
+    OnDragOver = Image1DragOver
+    OnPaint = Image1Paint
+    OnStartDrag = Image1StartDrag
+    Proportional = True
+    Stretch = True
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 510
+    Width = 557
+    Panels = <    
+      item
+        Width = 150
+      end    
+      item
+        Text = '0'
+        Width = 50
+      end    
+      item
+        Width = 100
+      end    
+      item
+        Width = 50
+      end>
+    SimplePanel = False
+    OnClick = StatusBar1Click
+  end
+  object Shape1: TShape
+    Left = 0
+    Height = 16
+    Top = 0
+    Width = 16
+    Brush.Color = clMoneyGreen
+    OnEndDrag = Shape1EndDrag
+    OnMouseDown = Shape1MouseDown
+    OnMouseUp = Shape1MouseUp
+    OnStartDrag = Shape1StartDrag
+  end
+  object MainMenu1: TMainMenu
+    left = 32
+    object MenuItem1: TMenuItem
+      Caption = 'Datei'
+      object MenuItem2: TMenuItem
+        Caption = 'Einstellungen'
+        OnClick = MenuItem2Click
+      end
+      object MenuItem3: TMenuItem
+        Caption = 'Ende'
+        OnClick = MenuItem3Click
+      end
+    end
+  end
+  object AcceptTimer: TTimer
+    Interval = 150
+    OnTimer = AcceptTimerTimer
+    left = 64
+    top = 8
+  end
+end
