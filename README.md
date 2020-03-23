@@ -1,7 +1,7 @@
 # zpl-viewer
 A Desktop ZPL Zebra Programming Language Viewer / Printer Emulator
 
-ZPL-Viewer emulates a Jet-Direct port on your desktop, and renders incoming printer data directy on the screen.
+ZPL-Viewer emulates a Jet-Direct port on your desktop, and renders incoming printer data directly on the screen.
 As backend, it uses labelary.com´s online REST-Api, which is currently free (fair use).
 Dont forget to open your desktop firewall (TCP port 9100).
 
