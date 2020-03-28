@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ExtCtrls,
-  StdCtrls, ComCtrls, Sockets, ssockets,fphttpclient,zplview_settings;
+  StdCtrls, ComCtrls, Sockets, ssockets,fphttpclient,zplview_settings,dateutils,
+  INIFiles;
 
 type
 
@@ -41,14 +42,20 @@ type
   private
     socket : TINetServer;
     zpldata : Pointer;
-    deg : integer;
+    zpldatalen:LongInt;
     dragDir: Integer;
     dragData: Integer;
     rulers:     array of integer;
     rulertypes: array of integer; // 0=Vertical, 1=horizonal
     RulersVisible : Boolean;
+    settings : ZViewSettings;
+    inifile  : string;
     procedure ReadJetData(Sender: TObject; DataStream: TSocketStream);
+    procedure GetLabelaryData;
     procedure NothingHappened(Sender: TObject);
+    procedure LoadSettings;
+    procedure SaveSettings;
+    procedure ResetSettings;
   public
 
   end;
@@ -67,7 +74,10 @@ begin
   GetMem (zpldata, 1000000);        // 1MB sollte für ZPL reichen ?!?
   FillChar (zpldata^,1000000,0);
 
-  socket := TINetServer.Create(9100);
+  inifile:=GetEnvironmentVariable('APPDATA')+'\zplview.ini';
+  ResetSettings;
+  LoadSettings;
+  socket := TINetServer.Create(settings.bindadr,settings.tcpport);
   socket.ReuseAddress:=true;
   socket.MaxConnections:=1;
   socket.OnConnect:=@ReadJetData;
@@ -76,11 +86,13 @@ begin
   socket.Listen;
   //socket.SetNonBlocking;
   socket.AcceptIdleTimeOut:=100;
-  deg:=0;
   SetLength(rulers,0);
   SetLength(rulertypes,0);
   DragDir:=-1;
   RulersVisible:= True;
+
+  zpldatalen:=0;
+
 end;
 
 procedure TForm1.Image1DragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -183,7 +195,26 @@ end;
 
 procedure TForm1.MenuItem2Click(Sender: TObject);
 begin
-  FormSettings.ShowModal;
+  FormSettings.PutSettings(settings);
+  if FormSettings.ShowModal=mrOK then
+  begin
+    FormSettings.GetSettings(settings);
+    StatusBar1.Panels[1].Text:=IntToStr(settings.rotation);
+    SaveSettings;
+    if zpldatalen>0 then GetLabelaryData;
+    if socket.Port<>settings.tcpport then
+    begin
+      socket.Free;
+      socket := TINetServer.Create(settings.bindadr, settings.tcpport);
+      socket.ReuseAddress:=true;
+      socket.MaxConnections:=1;
+      socket.OnConnect:=@ReadJetData;
+      socket.OnIdle:=@NothingHappened;
+      socket.Bind;
+      socket.Listen;
+      socket.AcceptIdleTimeOut:=100;
+    end;
+  end;
 end;
 
 
@@ -238,10 +269,13 @@ end;
 
 procedure TForm1.StatusBar1Click(Sender: TObject);
 begin
-  deg:=deg+90;
-  if deg>270 then deg:=0;
-  StatusBar1.Panels[1].Text:=IntToStr(deg);
-  Image1.Picture.Clear;
+  with settings do begin
+    rotation:=rotation+90;
+    if rotation>270 then rotation:=0;
+    StatusBar1.Panels[1].Text:=IntToStr(rotation);
+  end;
+  if zpldatalen>0 then GetLabelaryData;
+//  Image1.Picture.Clear;
 end;
 
 procedure TForm1.AcceptTimerTimer(Sender: TObject);
@@ -261,37 +295,59 @@ begin
   FreeMem (zpldata,1000000);
 end;
 
-procedure TForm1.ReadJetData(Sender: TObject; DataStream: TSocketStream);
-var len: LongInt;
-    FPHTTPClient: TFPHTTPClient;
-    URL: String;
+procedure TForm1.GetLabelaryData();
+var FPHTTPClient: TFPHTTPClient;
+    Fmt,URL,dpi: String;
+    FmtSet:TFormatSettings;
     PostData: TMemoryStream;
     PngData: TMemoryStream;
-    offset:LongInt;
+    filename:string;
+    errormsg:string;
 begin
-  //WriteLn('Accepting client: ', HostAddrToStr(NetToHost(Data.RemoteAddress.sin_addr)));
-  offset:=0;
-  repeat
-    len := DataStream.Read( (zpldata+offset)^ , 1000000-offset);
-    if len>0 then offset:=offset+len;
-  until len<=0;
-  DataStream.Free;
-
   FPHTTPClient := TFPHTTPClient.Create(nil);
   PostData := TMemoryStream.Create;
   PngData := TMemoryStream.Create;
   try
     FPHTTPClient.AllowRedirect := True;
-    PostData.Write(zpldata^,offset);
+    PostData.Write(zpldata^,zpldatalen);
     PostData.Position := 0;
     FPHTTPClient.RequestBody:=PostData;
-    FPHTTPClient.AddHeader('X-Rotation',IntToStr(deg));
+    FPHTTPClient.AddHeader('X-Rotation',IntToStr(settings.rotation));
     try
-      URL:='http://api.labelary.com/v1/printers/8dpmm/labels/6x6/0/';
+      case settings.resolution of
+        152: dpi:='6dpmm';
+        203: dpi:='8dpmm';
+        300: dpi:='12dpmm';
+        600: dpi:='24dpmm';
+      else
+        dpi:='8dpmm';
+      end;
+      FmtSet := DefaultFormatSettings;
+      FmtSet.DecimalSeparator := '.';
+      Fmt:='http://api.labelary.com/v1/printers/%s/labels/%nx%n/0/';
+      //URL:='http://api.labelary.com/v1/printers/8dpmm/labels/6x6/0/';
+      URL:=Format(Fmt,[dpi,settings.width,settings.height],FmtSet);
       FPHTTPClient.Post(URL,PngData);
       PngData.Position := 0;
-      Image1.Picture.LoadFromStream(PngData);
-      StatusBar1.Panels[0].Text:=DateTimeToStr(Now);
+      if FPHTTPClient.ResponseStatusCode=200 then
+      begin
+        Image1.Picture.LoadFromStream(PngData);
+        StatusBar1.Panels[0].Text:=DateTimeToStr(Now);
+        if settings.save then begin
+          filename:=settings.savepath;
+          if filename<>'' then filename:=filename+'/';
+          filename:=Format('%s%d.png',[SetDirSeparators(filename),DateTimeToUnix(now)]);
+          Image1.Picture.SaveToFile(filename);
+        end;
+      end
+      else begin
+        if PngData.Size<50 then begin
+          SetString(errormsg, PAnsiChar(PngData.Memory), PngData.Size);
+          ShowMessage(errormsg);
+        end
+        else
+          ShowMessage(FPHTTPClient.ResponseStatusText)
+      end;
     except
       on E: exception do
         ShowMessage(E.Message);
@@ -300,6 +356,85 @@ begin
     FreeAndNil(PostData);
     FreeAndNil(PngData);
     FreeAndNil(FPHTTPClient);
+  end;
+
+end;
+
+procedure TForm1.ReadJetData(Sender: TObject; DataStream: TSocketStream);
+var len: LongInt;
+begin
+  //WriteLn('Accepting client: ', HostAddrToStr(NetToHost(Data.RemoteAddress.sin_addr)));
+  zpldatalen:=0;
+  repeat
+    len := DataStream.Read( (zpldata+zpldatalen)^ , 1000000-zpldatalen);
+    if len>0 then zpldatalen:=zpldatalen+len;
+  until len<=0;
+  DataStream.Free;
+  GetLabelaryData;
+end;
+
+procedure TForm1.LoadSettings;
+var
+  INI: TINIFile;
+begin
+  INI    := TINIFile.Create(inifile);
+  with settings do begin
+    resolution :=INI.ReadInteger('SETTINGS','resolution',203);
+    rotation :=INI.ReadInteger('SETTINGS','rotation',0);
+    width :=INI.ReadFloat('SETTINGS','width',4.0);
+    height :=INI.ReadFloat('SETTINGS','height',3.0);
+    save := INI.ReadBool('SETTINGS','save',false);
+    savepath:= INI.ReadString('SETTINGS','savepath','');
+    print := INI.ReadBool('SETTINGS','print',false);
+    printraw := INI.ReadBool('SETTINGS','printraw',false);
+    printer:=INI.ReadString('SETTINGS','printer','');
+    executescript := INI.ReadBool('SETTINGS','executescript',false);
+    scriptpath:=INI.ReadString('SETTINGS','scriptpath','');
+    tcpport:=INI.ReadInteger('SETTINGS','tcpport',9100);    ;
+    bindadr:=INI.ReadString('SETTINGS','bindadr','0.0.0.0');    ;
+  end;
+  INI.Free;
+end;
+
+procedure TForm1.SaveSettings;
+var
+  INI: TINIFile;
+begin
+  INI := TINIFile.Create(inifile);
+  with settings do begin
+    INI.WriteInteger('SETTINGS','resolution',resolution);
+    INI.WriteInteger('SETTINGS','rotation',rotation);
+    INI.WriteFloat('SETTINGS','width',width);
+    INI.WriteFloat('SETTINGS','height',height);
+    INI.WriteBool('SETTINGS','save',save);
+    INI.WriteString('SETTINGS','savepath',savepath);
+    INI.WriteBool('SETTINGS','print',print);
+    INI.WriteBool('SETTINGS','printraw',printraw);
+    INI.WriteString('SETTINGS','printer',printer);
+    INI.WriteBool('SETTINGS','executescript',executescript);
+    INI.WriteString('SETTINGS','scriptpath',scriptpath);
+    INI.WriteInteger('SETTINGS','tcpport',tcpport);    ;
+    INI.WriteString('SETTINGS','bindadr',bindadr);    ;
+  end;
+  INI.Free;
+end;
+
+procedure TForm1.ResetSettings;
+begin
+  with settings do begin
+    resolution :=203;
+    rotation := 0;
+    width:=4.0;
+    height:=3.0;
+    save := false;
+    savepath:='';
+    print:=false;
+    printraw:=false;
+    printer:='';
+    executescript:=false;
+    scriptpath:='';
+    tcpport:=9100;
+    bindadr:='0.0.0.0';
   end;
 end;
 

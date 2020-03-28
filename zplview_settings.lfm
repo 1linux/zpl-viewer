@@ -1,17 +1,18 @@
 object FormSettings: TFormSettings
   Left = 413
-  Height = 234
+  Height = 376
   Top = 127
-  Width = 270
+  Width = 685
   Caption = 'Einstellungen'
-  ClientHeight = 234
-  ClientWidth = 270
+  ClientHeight = 376
+  ClientWidth = 685
+  OnShow = FormShow
   Position = poMainFormCenter
   LCLVersion = '2.0.6.0'
   object BitBtn1: TBitBtn
     Left = 16
     Height = 30
-    Top = 189
+    Top = 331
     Width = 75
     Anchors = [akLeft, akBottom]
     Default = True
@@ -21,9 +22,9 @@ object FormSettings: TFormSettings
     TabOrder = 0
   end
   object BitBtn2: TBitBtn
-    Left = 163
+    Left = 578
     Height = 30
-    Top = 189
+    Top = 331
     Width = 91
     Anchors = [akRight, akBottom]
     Cancel = True
@@ -37,7 +38,6 @@ object FormSettings: TFormSettings
     Height = 23
     Top = 96
     Width = 100
-    Anchors = [akTop, akRight]
     TabOrder = 2
     Text = 'EdtWidth'
   end
@@ -46,7 +46,6 @@ object FormSettings: TFormSettings
     Height = 23
     Top = 136
     Width = 100
-    Anchors = [akTop, akRight]
     TabOrder = 3
     Text = 'EdtHeight'
   end
@@ -55,7 +54,6 @@ object FormSettings: TFormSettings
     Height = 23
     Top = 56
     Width = 100
-    Anchors = [akTop, akRight]
     ItemHeight = 15
     Items.Strings = (
       '0'
@@ -105,10 +103,113 @@ object FormSettings: TFormSettings
     Width = 100
     ItemHeight = 15
     Items.Strings = (
+      '152'
       '203'
       '300'
+      '600'
     )
     Style = csDropDownList
     TabOrder = 5
+  end
+  object ChbSave: TCheckBox
+    Left = 328
+    Height = 19
+    Top = 16
+    Width = 98
+    Caption = 'PNG speichern'
+    TabOrder = 6
+  end
+  object EdtPath: TEdit
+    Left = 328
+    Height = 23
+    Top = 40
+    Width = 341
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 7
+    Text = 'EdtPath'
+  end
+  object ChbPrint: TCheckBox
+    Left = 328
+    Height = 19
+    Top = 72
+    Width = 64
+    Caption = 'Drucken'
+    TabOrder = 8
+  end
+  object ChbRaw: TCheckBox
+    Left = 440
+    Height = 19
+    Top = 72
+    Width = 42
+    Caption = 'Raw'
+    TabOrder = 9
+  end
+  object ComPrinter: TComboBox
+    Left = 326
+    Height = 23
+    Top = 96
+    Width = 343
+    Anchors = [akTop, akLeft, akRight]
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 10
+  end
+  object ChbScript: TCheckBox
+    Left = 328
+    Height = 19
+    Top = 136
+    Width = 106
+    Caption = 'Skript ausführen'
+    TabOrder = 11
+  end
+  object EdtScript: TEdit
+    Left = 326
+    Height = 23
+    Top = 168
+    Width = 314
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 12
+    Text = 'EdtScript'
+  end
+  object Button1: TButton
+    Left = 640
+    Height = 25
+    Top = 166
+    Width = 30
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    TabOrder = 13
+  end
+  object EdtPort: TEdit
+    Left = 144
+    Height = 23
+    Top = 176
+    Width = 100
+    TabOrder = 14
+    Text = '9100'
+  end
+  object Label5: TLabel
+    Left = 17
+    Height = 15
+    Top = 176
+    Width = 46
+    Caption = 'TCP Port'
+    ParentColor = False
+  end
+  object EdtBind: TEdit
+    Left = 144
+    Height = 23
+    Top = 216
+    Width = 100
+    TabOrder = 15
+    Text = '0.0.0.0'
+  end
+  object Label6: TLabel
+    Left = 17
+    Height = 15
+    Top = 216
+    Width = 68
+    Caption = 'Bind Adresse'
+    ParentColor = False
   end
 end

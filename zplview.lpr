@@ -7,8 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, zplview_main, zplview_settings
-  { you can add units after this };
+  Forms, zplview_main, zplview_settings, printer4lazarus;
 
 {$R *.res}
 

@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 419
+  Left = 340
   Height = 553
-  Top = 184
+  Top = 221
   Width = 557
   Caption = 'ZPL-View'
   ClientHeight = 533
@@ -20,6 +20,7 @@ object Form1: TForm1
     OnDragOver = Image1DragOver
     OnPaint = Image1Paint
     OnStartDrag = Image1StartDrag
+    ParentShowHint = False
     Proportional = True
     Stretch = True
   end

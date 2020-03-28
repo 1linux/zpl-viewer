@@ -14,6 +14,19 @@
       </XPManifest>
       <Icon Value="0"/>
     </General>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="po"/>
+    </i18n>
+    <VersionInfo>
+      <UseVersionInfo Value="True"/>
+      <AutoIncrementBuild Value="True"/>
+      <MinorVersionNr Value="2"/>
+      <BuildNr Value="116"/>
+      <Language Value="0407"/>
+      <Attributes pvaPreRelease="True"/>
+      <StringTable CompanyName="Helmut Gruber" ProductName="ZPL-Viewer"/>
+    </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Default" Default="True"/>
       <Item2 Name="Debug">
@@ -93,31 +106,44 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <RequiredPackages Count="2">
+    <RequiredPackages Count="3">
       <Item1>
-        <PackageName Value="TurboPowerIPro"/>
+        <PackageName Value="Printer4Lazarus"/>
       </Item1>
       <Item2>
-        <PackageName Value="LCL"/>
+        <PackageName Value="TurboPowerIPro"/>
       </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="5">
       <Unit0>
         <Filename Value="zplview.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="../zplview_main.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit1>
-      <Unit2>
         <Filename Value="zplview_settings.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormSettings"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="zplview_main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="zplview_main.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="zplview_settings.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
