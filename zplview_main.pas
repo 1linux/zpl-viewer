@@ -7,8 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Menus, ExtCtrls,
   StdCtrls, ComCtrls, Sockets, ssockets,fphttpclient,zplview_settings,dateutils,
-  INIFiles;
-
+  INIFiles,Printers,lazlogger;
 type
 
   { TForm1 }
@@ -56,6 +55,10 @@ type
     procedure LoadSettings;
     procedure SaveSettings;
     procedure ResetSettings;
+    function  IniFileName():string;
+    function  GetLANIp():string;
+    procedure RePrint;
+    procedure SavePng;
   public
 
   end;
@@ -69,14 +72,41 @@ implementation
 
 { TForm1 }
 
+function TForm1.GetLANIp():string;
+var
+  s: TInetSocket;
+begin
+  try
+    s := TInetSocket.Create('1.1.1.1',80);
+    GetLANIp:=NetAddrToStr(s.LocalAddress.sin_addr);
+  finally
+    s.Free;
+  end;
+end;
+
+function  TForm1.IniFileName():string;
+var f,i:string;
+begin
+  i:=ChangeFileExt(ExtractFileName(Application.ExeName),'.ini');
+  if GetEnvironmentVariable('APPDATA')<>'' then
+    IniFileName:=GetEnvironmentVariable('APPDATA')+'\'+i
+  else if GetEnvironmentVariable('HOME')<>'' then
+    IniFileName:=GetEnvironmentVariable('HOME')+'/.config/'+i
+  else
+    IniFileName:=i;
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   GetMem (zpldata, 1000000);        // 1MB sollte für ZPL reichen ?!?
   FillChar (zpldata^,1000000,0);
+  zpldatalen:=0;
 
-  inifile:=GetEnvironmentVariable('APPDATA')+'\zplview.ini';
+  inifile:=IniFileName();
   ResetSettings;
   LoadSettings;
+  StatusBar1.Panels[3].Text:=GetLANIp()+':'+IntToStr(settings.tcpport);
+
   socket := TINetServer.Create(settings.bindadr,settings.tcpport);
   socket.ReuseAddress:=true;
   socket.MaxConnections:=1;
@@ -86,13 +116,11 @@ begin
   socket.Listen;
   //socket.SetNonBlocking;
   socket.AcceptIdleTimeOut:=100;
+
   SetLength(rulers,0);
   SetLength(rulertypes,0);
   DragDir:=-1;
   RulersVisible:= True;
-
-  zpldatalen:=0;
-
 end;
 
 procedure TForm1.Image1DragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -143,8 +171,6 @@ begin
     Image1.Repaint;
   end;
 end;
-
-
 
 procedure TForm1.Image1Paint(Sender: TObject);
 var
@@ -200,6 +226,7 @@ begin
   begin
     FormSettings.GetSettings(settings);
     StatusBar1.Panels[1].Text:=IntToStr(settings.rotation);
+    StatusBar1.Panels[3].Text:=GetLANIp()+':'+IntToStr(settings.tcpport);
     SaveSettings;
     if zpldatalen>0 then GetLabelaryData;
     if socket.Port<>settings.tcpport then
@@ -216,7 +243,6 @@ begin
     end;
   end;
 end;
-
 
 procedure TForm1.MenuItem3Click(Sender: TObject);
 begin
@@ -248,7 +274,6 @@ begin
     Image1.Repaint;
   end;
 end;
-
 
 procedure TForm1.Shape1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
@@ -295,13 +320,57 @@ begin
   FreeMem (zpldata,1000000);
 end;
 
+procedure TForm1.SavePng;
+var
+  filename:string;
+begin
+  filename:=settings.savepath;
+  if filename<>'' then filename:=filename+'/';
+  filename:=Format('%s%d.png',[SetDirSeparators(filename),DateTimeToUnix(now)]);
+  Image1.Picture.SaveToFile(filename);
+end;
+
+procedure TForm1.RePrint;
+var
+  p:integer;
+  written: Integer;
+  data:string;
+begin
+  p:=Printer.Printers.IndexOf(settings.printer);
+  if p<0 then begin
+    ShowMessage('Eingesteller Drucker ungültig');
+    exit
+  end;
+  if zpldatalen=0 then begin
+    ShowMessage('Es gibts nichts zu drucken!');
+    exit;
+  end;
+  Printer.PrinterIndex := p;
+  if Printer.Printing then Printer.Abort;
+  try
+    Printer.Title := 'ZPL-View reprint';
+    Printer.RawMode:=settings.printraw;
+    Printer.BeginDoc;
+    if settings.printraw then
+      Printer.Write(self.zpldata^,self.zpldatalen, written)
+    else
+      printer.Canvas.StretchDraw(Classes.Rect(0,0,
+        Image1.Picture.Graphic.Width*printer.XDPI div settings.resolution,
+        Image1.Picture.Graphic.Height*printer.YDPI div settings.resolution),
+        Image1.Picture.Graphic);
+  finally
+    Printer.EndDoc;
+  end;
+
+end;
+
 procedure TForm1.GetLabelaryData();
 var FPHTTPClient: TFPHTTPClient;
     Fmt,URL,dpi: String;
     FmtSet:TFormatSettings;
     PostData: TMemoryStream;
     PngData: TMemoryStream;
-    filename:string;
+    //filename:string;
     errormsg:string;
 begin
   FPHTTPClient := TFPHTTPClient.Create(nil);
@@ -333,20 +402,16 @@ begin
       begin
         Image1.Picture.LoadFromStream(PngData);
         StatusBar1.Panels[0].Text:=DateTimeToStr(Now);
-        if settings.save then begin
-          filename:=settings.savepath;
-          if filename<>'' then filename:=filename+'/';
-          filename:=Format('%s%d.png',[SetDirSeparators(filename),DateTimeToUnix(now)]);
-          Image1.Picture.SaveToFile(filename);
-        end;
+        if settings.save then SavePng;
+        if settings.print then RePrint;
       end
       else begin
-        if PngData.Size<50 then begin
+        if PngData.Size<100 then begin
           SetString(errormsg, PAnsiChar(PngData.Memory), PngData.Size);
-          ShowMessage(errormsg);
+          ShowMessage('Labelary Error:'+errormsg);
         end
         else
-          ShowMessage(FPHTTPClient.ResponseStatusText)
+          ShowMessage('Labelary Error:'+FPHTTPClient.ResponseStatusText)
       end;
     except
       on E: exception do
@@ -362,6 +427,7 @@ end;
 
 procedure TForm1.ReadJetData(Sender: TObject; DataStream: TSocketStream);
 var len: LongInt;
+    db:string;
 begin
   //WriteLn('Accepting client: ', HostAddrToStr(NetToHost(Data.RemoteAddress.sin_addr)));
   zpldatalen:=0;
@@ -369,6 +435,9 @@ begin
     len := DataStream.Read( (zpldata+zpldatalen)^ , 1000000-zpldatalen);
     if len>0 then zpldatalen:=zpldatalen+len;
   until len<=0;
+  SetString(db,PAnsiChar(zpldata),zpldatalen);
+  DebugLn(DateTimeToStr(Now));
+  DebugLn(db);
   DataStream.Free;
   GetLabelaryData;
 end;
@@ -437,7 +506,6 @@ begin
     bindadr:='0.0.0.0';
   end;
 end;
-
 
 end.
 

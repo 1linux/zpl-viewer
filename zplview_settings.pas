@@ -71,6 +71,7 @@ begin
 end;
 procedure TFormSettings.PutSettings(VAR setup:ZViewSettings);
 begin
+  ComPrinter.Items.Assign(Printer.Printers);
   with setup do begin
     ComRes.Text:= IntToStr(resolution);
     ComRotate.Text:= IntToStr(rotation);
@@ -80,7 +81,7 @@ begin
     EdtPath.Text:=savepath;
     ChbPrint.Checked:=print;
     ChbRaw.Checked:=printraw;
-    ComPrinter.Text:=printer;
+    ComPrinter.ItemIndex:=ComPrinter.Items.IndexOf(printer);
     ChbScript.Checked:=executescript;
     EdtScript.Text:=scriptpath;
     EdtPort.Text:=IntToStr(tcpport);
