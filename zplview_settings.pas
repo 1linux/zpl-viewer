@@ -21,6 +21,7 @@ type
     scriptpath:string;
     tcpport:integer;
     bindadr:string;
+    saverawdata:boolean;
   end;
 
   { TFormSettings }
@@ -33,6 +34,7 @@ type
     ChbPrint: TCheckBox;
     ChbRaw: TCheckBox;
     ChbScript: TCheckBox;
+    ChbSaveRaw: TCheckBox;
     ComPrinter: TComboBox;
     ComRes: TComboBox;
     ComRotate: TComboBox;
@@ -83,6 +85,7 @@ begin
     ChbRaw.Checked:=printraw;
     ComPrinter.ItemIndex:=ComPrinter.Items.IndexOf(printer);
     ChbScript.Checked:=executescript;
+    ChbSaveRaw.Checked:=saverawdata;
     EdtScript.Text:=scriptpath;
     EdtPort.Text:=IntToStr(tcpport);
     EdtBind.Text:=bindadr;
@@ -102,6 +105,7 @@ begin
     printraw:=ChbRaw.Checked;
     printer:=ComPrinter.Text;
     executescript:=ChbScript.Checked;
+    saverawdata:=ChbSaveRaw.Checked;
     scriptpath:=EdtScript.Text;
     tcpport:=StrToInt(EdtPort.Text);
     bindadr:=EdtBind.Text;

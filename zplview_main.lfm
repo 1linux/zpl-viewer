@@ -1,20 +1,20 @@
 object Form1: TForm1
-  Left = 340
-  Height = 553
-  Top = 221
-  Width = 557
+  Left = 413
+  Height = 700
+  Top = 228
+  Width = 777
   Caption = 'ZPL-View'
-  ClientHeight = 533
-  ClientWidth = 557
+  ClientHeight = 680
+  ClientWidth = 777
   Menu = MainMenu1
   OnClose = FormClose
   OnCreate = FormCreate
   LCLVersion = '2.0.6.0'
   object Image1: TImage
     Left = 0
-    Height = 510
+    Height = 657
     Top = 0
-    Width = 557
+    Width = 627
     Align = alClient
     OnDragDrop = Image1DragDrop
     OnDragOver = Image1DragOver
@@ -27,8 +27,8 @@ object Form1: TForm1
   object StatusBar1: TStatusBar
     Left = 0
     Height = 23
-    Top = 510
-    Width = 557
+    Top = 657
+    Width = 777
     Panels = <    
       item
         Width = 150
@@ -56,6 +56,43 @@ object Form1: TForm1
     OnMouseDown = Shape1MouseDown
     OnMouseUp = Shape1MouseUp
     OnStartDrag = Shape1StartDrag
+  end
+  object Panel1: TPanel
+    Left = 627
+    Height = 657
+    Top = 0
+    Width = 150
+    Align = alRight
+    ClientHeight = 657
+    ClientWidth = 150
+    TabOrder = 1
+    object MSourceCode: TMemo
+      Left = 16
+      Height = 655
+      Top = 1
+      Width = 133
+      Align = alClient
+      TabOrder = 1
+    end
+    object BRenderManual: TButton
+      Left = 97
+      Height = 25
+      Top = 630
+      Width = 51
+      Anchors = [akRight, akBottom]
+      Caption = 'Render'
+      OnClick = BRenderManualClick
+      TabOrder = 2
+    end
+    object Panel2: TPanel
+      Left = 1
+      Height = 655
+      Top = 1
+      Width = 15
+      Align = alLeft
+      TabOrder = 0
+      OnClick = Panel2Click
+    end
   end
   object MainMenu1: TMainMenu
     left = 32

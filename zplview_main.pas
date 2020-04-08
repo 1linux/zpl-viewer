@@ -13,15 +13,20 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
+    BRenderManual: TButton;
     Image1: TImage;
     MainMenu1: TMainMenu;
+    MSourceCode: TMemo;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     AcceptTimer: TTimer;
+    Panel1: TPanel;
+    Panel2: TPanel;
     Shape1: TShape;
     StatusBar1: TStatusBar;
     procedure AcceptTimerTimer(Sender: TObject);
+    procedure BRenderManualClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure Image1DragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -31,6 +36,7 @@ type
     procedure Image1StartDrag(Sender: TObject; var DragObject: TDragObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
+    procedure Panel2Click(Sender: TObject);
     procedure Shape1EndDrag(Sender, Target: TObject; X, Y: Integer);
     procedure Shape1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -59,6 +65,7 @@ type
     function  GetLANIp():string;
     procedure RePrint;
     procedure SavePng;
+    procedure SaveRaw(data:string);
   public
 
   end;
@@ -121,6 +128,7 @@ begin
   SetLength(rulertypes,0);
   DragDir:=-1;
   RulersVisible:= True;
+  Panel1.Width:=15;
 end;
 
 procedure TForm1.Image1DragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -249,6 +257,18 @@ begin
   Form1.Close;
 end;
 
+procedure TForm1.Panel2Click(Sender: TObject);
+begin
+  if Panel1.Width<50 then begin
+    Form1.Width:=Form1.Width + Form1.Width;
+    Panel1.Width:=Panel1.Width + (Form1.Width div 2);
+  end
+  else begin
+    Form1.Width:=Form1.Width div 2;
+    Panel1.Width:=15;
+  end
+end;
+
 procedure TForm1.Shape1EndDrag(Sender, Target: TObject; X, Y: Integer);
 begin
   DragDir:=-1;
@@ -308,6 +328,15 @@ begin
   socket.StartAccepting;
 end;
 
+procedure TForm1.BRenderManualClick(Sender: TObject);
+begin
+  if MSourceCode.Lines.Count > 3 then begin
+    zpldatalen := MSourceCode.Lines.Text.Length;
+    Move(MSourceCode.Lines.Text[1],zpldata^, zpldatalen);
+    GetLabelaryData;;
+  end;
+end;
+
 procedure TForm1.NothingHappened(Sender: TObject);
 begin
   socket.StopAccepting;
@@ -329,6 +358,24 @@ begin
   filename:=Format('%s%d.png',[SetDirSeparators(filename),DateTimeToUnix(now)]);
   Image1.Picture.SaveToFile(filename);
 end;
+
+procedure TForm1.SaveRaw(data:string);
+Var
+ File1:TextFile;
+ filename:string;
+begin
+  filename:=settings.savepath;
+  if filename<>'' then filename:=filename+'/';
+  filename:=Format('%srawdata.txt',[SetDirSeparators(filename)]);
+  AssignFile(File1,filename);
+  Try
+    Rewrite(File1);
+    Writeln(File1,data);
+  Finally
+    CloseFile(File1);
+  end;
+end;
+
 
 procedure TForm1.RePrint;
 var
@@ -364,7 +411,7 @@ begin
 
 end;
 
-procedure TForm1.GetLabelaryData();
+procedure TForm1.GetLabelaryData;
 var FPHTTPClient: TFPHTTPClient;
     Fmt,URL,dpi: String;
     FmtSet:TFormatSettings;
@@ -439,8 +486,11 @@ begin
   DebugLn(DateTimeToStr(Now));
   DebugLn(db);
   DataStream.Free;
+  if MSourceCode.Text='' then MSourceCode.Text:=db;
+  if settings.saverawdata then SaveRaw(db);
   GetLabelaryData;
 end;
+
 
 procedure TForm1.LoadSettings;
 var
@@ -458,6 +508,7 @@ begin
     printraw := INI.ReadBool('SETTINGS','printraw',false);
     printer:=INI.ReadString('SETTINGS','printer','');
     executescript := INI.ReadBool('SETTINGS','executescript',false);
+    saverawdata := INI.ReadBool('SETTINGS','saverawdata',false);
     scriptpath:=INI.ReadString('SETTINGS','scriptpath','');
     tcpport:=INI.ReadInteger('SETTINGS','tcpport',9100);    ;
     bindadr:=INI.ReadString('SETTINGS','bindadr','0.0.0.0');    ;
@@ -481,6 +532,7 @@ begin
     INI.WriteBool('SETTINGS','printraw',printraw);
     INI.WriteString('SETTINGS','printer',printer);
     INI.WriteBool('SETTINGS','executescript',executescript);
+    INI.WriteBool('SETTINGS','saverawdata',saverawdata);
     INI.WriteString('SETTINGS','scriptpath',scriptpath);
     INI.WriteInteger('SETTINGS','tcpport',tcpport);    ;
     INI.WriteString('SETTINGS','bindadr',bindadr);    ;
@@ -501,6 +553,7 @@ begin
     printraw:=false;
     printer:='';
     executescript:=false;
+    saverawdata:=false;
     scriptpath:='';
     tcpport:=9100;
     bindadr:='0.0.0.0';
